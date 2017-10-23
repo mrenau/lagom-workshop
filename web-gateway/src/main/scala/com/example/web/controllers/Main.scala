@@ -2,9 +2,8 @@ package com.example.web.controllers
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.{Locale, UUID}
+import java.util.UUID
 
-import com.example.reservation.api.{Reservation, ReservationService}
 import com.example.search.api.SearchService
 import play.api.data.Form
 import play.api.data.Forms._
@@ -14,7 +13,10 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class Main(searchService: SearchService, reservationService: ReservationService, override val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
+/**
+  * Main controller for the holiday listing gateway.
+  */
+class Main(searchService: SearchService, override val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   private val searchForm = Form(mapping(
     "checkin" -> localDate,
@@ -48,17 +50,18 @@ class Main(searchService: SearchService, reservationService: ReservationService,
     reservationForm.bindFromRequest().fold(
       errors => Future.successful(BadRequest), // Shouldn't happen, all fields are hidden
       form => {
-        reservationService.reserve(form.listingId)
-          .invoke(Reservation(form.checkin, form.checkout))
-          .map { added =>
-            Ok(views.html.reservationAdded(added))
-          }
+        // Post the reservation added to the reservation service
+        // todo - implement me
+        Future.successful(NotImplemented("Not yet implemented"))
       }
     )
   }
 
   def reservations(listingId: UUID) = Action.async { implicit rh =>
-    val currentReservationsFuture = reservationService.getCurrentReservations(listingId).invoke()
+    // Look up the current reservations for the listing id
+    // todo - implement me
+    val currentReservationsFuture = Future.successful(Nil)
+
     val listingNameFuture = searchService.listingName(listingId).invoke()
 
     for {

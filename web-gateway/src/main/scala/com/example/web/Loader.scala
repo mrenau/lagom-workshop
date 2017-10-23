@@ -1,8 +1,7 @@
 package com.example.web
 
-import com.example.reservation.api.ReservationService
-import com.example.search.api.SearchService
 import _root_.controllers.Assets
+import com.example.search.api.SearchService
 import com.example.web.controllers.Main
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.api.{ServiceAcl, ServiceInfo}
@@ -35,7 +34,6 @@ abstract class WebGateway(context: Context) extends BuiltInComponentsFromContext
   }
 
   lazy val searchService = serviceClient.implement[SearchService]
-  lazy val reservationService = serviceClient.implement[ReservationService]
 
   lazy val main = wire[Main]
   lazy val assets = wire[Assets]

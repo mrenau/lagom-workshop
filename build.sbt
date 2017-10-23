@@ -7,58 +7,38 @@ scalaVersion in ThisBuild := "2.11.8"
 val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
 
-lagomCassandraEnabled in ThisBuild := false
-
 lazy val `holiday-listing` = (project in file("."))
-  .aggregate(`reservation-api`, `reservation-impl`, `search-api`, `search-impl`)
+  .aggregate(common, `search-api`, `search-impl`)
 
-lazy val `reservation-api` = (project in file("reservation-api"))
-  .settings(
-    libraryDependencies ++= Seq(
-      lagomScaladslApi
+lazy val common = (project in file("common"))
+    .settings(
+      libraryDependencies += json
     )
-  )
-
-lazy val `reservation-impl` = (project in file("reservation-impl"))
-  .enablePlugins(LagomScala)
-  .settings(
-    libraryDependencies ++= Seq(
-      lagomScaladslPersistenceJdbc,
-      "com.typesafe.play" %% "play-slick" % "2.0.2",
-      "com.h2database" % "h2" % "1.4.196",
-      lagomScaladslKafkaBroker,
-      lagomScaladslPubSub,
-      lagomScaladslTestKit,
-      macwire,
-      scalaTest
-    )
-  )
-  .settings(lagomForkedTestSettings: _*)
-  .dependsOn(`reservation-api`, `search-api`)
 
 lazy val `search-api` = (project in file("search-api"))
   .settings(
     libraryDependencies ++= Seq(
       lagomScaladslApi
     )
-  ).dependsOn(`reservation-api`)
+  ).dependsOn(common)
 
 lazy val `search-impl` = (project in file("search-impl"))
   .enablePlugins(LagomScala)
   .settings(
     libraryDependencies ++= Seq(
+      lagomScaladslPersistenceCassandra,
+      lagomScaladslKafkaBroker,
       lagomScaladslTestKit,
-      lagomScaladslKafkaClient,
       macwire,
       scalaTest
     )
   )
-  .dependsOn(`search-api`, `reservation-api`)
+  .dependsOn(`search-api`)
 
 lazy val `web-gateway` = (project in file("web-gateway"))
   .enablePlugins(PlayScala && LagomPlay)
   .disablePlugins(PlayLayoutPlugin)
-  .dependsOn(`reservation-api`, `search-api`)
+  .dependsOn(`search-api`)
   .settings(
     version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(

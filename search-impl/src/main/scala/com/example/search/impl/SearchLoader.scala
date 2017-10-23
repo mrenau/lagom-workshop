@@ -5,7 +5,6 @@ import com.lightbend.lagom.scaladsl.server._
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import play.api.libs.ws.ahc.AhcWSComponents
 import com.example.search.api.SearchService
-import com.example.reservation.api.ReservationService
 import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaClientComponents
 import com.softwaremill.macwire._
 import play.api.LoggerConfigurator
@@ -32,6 +31,4 @@ abstract class SearchApplication(context: LagomApplicationContext)
 
   // Bind the service that this server provides
   override lazy val lagomServer = serverFor[SearchService](wire[SearchServiceImpl])
-
-  lazy val searchService = serviceClient.implement[ReservationService]
 }
