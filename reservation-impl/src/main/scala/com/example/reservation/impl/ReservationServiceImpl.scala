@@ -5,8 +5,10 @@ import java.util.UUID
 import com.example.common
 import com.example.reservation.api.ReservationService
 import com.lightbend.lagom.scaladsl.api.ServiceCall
-import com.lightbend.lagom.scaladsl.persistence.{PersistentEntityRef, PersistentEntityRegistry}
+import com.lightbend.lagom.scaladsl.broker.TopicProducer
+import com.lightbend.lagom.scaladsl.persistence.{EventStreamElement, PersistentEntityRef, PersistentEntityRegistry}
 
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -43,4 +45,15 @@ class ReservationServiceImpl(persistentEntityRegistry: PersistentEntityRegistry)
     // Get the current reservations from the enitity
     reservationEntity(listingId).ask(GetCurrentReservations)
   }
+
+  /**
+    * The stream of reservation events.
+    */
+  override def events =
+    TopicProducer.taggedStreamWithOffset(immutable.Seq(ReservationEvent.Tag)) { (tag, offset) =>
+      persistentEntityRegistry.eventStream(tag, offset).map {
+        case EventStreamElement(_, ReservationAdded(listingId, reservationId, reservation), offset) =>
+          common.ReservationAdded(listingId, reservationId, reservation) -> offset
+      }
+    }
 }

@@ -3,12 +3,12 @@ package com.example.reservation.impl
 import com.example.reservation.api.ReservationService
 import com.lightbend.lagom.scaladsl.api.ServiceLocator
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
+import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaComponents
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
 import com.lightbend.lagom.scaladsl.server.{LagomApplication, LagomApplicationContext, LagomApplicationLoader}
 import play.api.LoggerConfigurator
 import play.api.libs.ws.ahc.AhcWSComponents
-
 import com.softwaremill.macwire._
 
 /**
@@ -43,7 +43,9 @@ abstract class ReservationApplication(context: LagomApplicationContext)
   // And we use the async-http-client WS client implementation
   with AhcWSComponents
   // And mix in the Cassandra persistence components
-  with CassandraPersistenceComponents {
+  with CassandraPersistenceComponents
+  // And mix in the Kafka broker components
+  with LagomKafkaComponents {
 
   // Initialise logging
   LoggerConfigurator(environment.classLoader).foreach(_.configure(environment))
