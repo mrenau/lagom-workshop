@@ -2,7 +2,8 @@ package com.example.reservation.impl
 
 import akka.Done
 import com.datastax.driver.extras.codecs.jdk8.LocalDateCodec
-import com.lightbend.lagom.scaladsl.persistence.ReadSideProcessor
+import com.datastax.driver.core.BoundStatement
+import com.lightbend.lagom.scaladsl.persistence.{EventStreamElement, ReadSideProcessor}
 import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
 
 import scala.collection.immutable
@@ -25,7 +26,25 @@ class ReservationEventProcessor(session: CassandraSession, readSide: CassandraRe
         // Register the Java 8 LocalDate codec
         .map(_.getCluster.getConfiguration.getCodecRegistry.register(LocalDateCodec.instance))
         .map(_ => Done)
-      ).build()
+      ).setEventHandler[ReservationAdded](insertReservation)
+      .build()
+  }
+
+  /**
+    * Insert a reservation.
+    */
+  private def insertReservation(event: EventStreamElement[ReservationAdded]): Future[immutable.Seq[BoundStatement]] = {
+    session.prepare(
+      """INSERT INTO current_reservations (listing_id, checkout, checkin, reservation_id)
+        |VALUES (?, ?, ?, ?)
+      """.stripMargin).map { statement =>
+        immutable.Seq(statement.bind(
+          event.event.listingId,
+          event.event.reservation.checkout,
+          event.event.reservation.checkin,
+          event.event.reservationId
+        ))
+      }
   }
 
   /**
