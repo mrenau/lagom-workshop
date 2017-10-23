@@ -5,7 +5,10 @@ import java.util.UUID
 import com.example.common.Reservation
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity.ReplyType
 import com.lightbend.lagom.scaladsl.persistence.{AggregateEvent, AggregateEventTag}
+import com.lightbend.lagom.scaladsl.playjson.{JsonSerializer, JsonSerializerRegistry}
 import play.api.libs.json._
+
+import scala.collection.immutable
 
 /**
   * Trait for all reservation events.
@@ -115,4 +118,20 @@ object ReservationState {
     */
   val empty = ReservationState(Nil)
 }
+
+/**
+  * Serializer registry for all reservation objects.
+  *
+  * This tells Akka remoting where to find the serializers for the various
+  * objects we're using.
+  */
+object ReservationSerializerRegistry extends JsonSerializerRegistry {
+  override def serializers: immutable.Seq[JsonSerializer[_]] = immutable.Seq(
+    JsonSerializer[ReservationAdded],
+    JsonSerializer[AddReservation],
+    JsonSerializer[GetCurrentReservations.type],
+    JsonSerializer[ReservationState]
+  )
+}
+
 
