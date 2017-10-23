@@ -8,12 +8,32 @@ val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
 
 lazy val `holiday-listing` = (project in file("."))
-  .aggregate(common, `search-api`, `search-impl`)
+  .aggregate(common, `search-api`, `search-impl`, `reservation-api`, `reservation-impl`)
 
 lazy val common = (project in file("common"))
     .settings(
       libraryDependencies += json
     )
+
+lazy val `reservation-api` = (project in file("reservation-api"))
+  .settings(
+    libraryDependencies ++= Seq(
+      lagomScaladslApi
+    )
+  ).dependsOn(common)
+
+lazy val `reservation-impl` = (project in file("reservation-impl"))
+  .enablePlugins(LagomScala)
+  .settings(
+    libraryDependencies ++= Seq(
+      lagomScaladslPersistenceCassandra,
+      lagomScaladslKafkaBroker,
+      lagomScaladslTestKit,
+      macwire,
+      scalaTest
+    )
+  )
+  .dependsOn(`reservation-api`)
 
 lazy val `search-api` = (project in file("search-api"))
   .settings(
@@ -33,12 +53,12 @@ lazy val `search-impl` = (project in file("search-impl"))
       scalaTest
     )
   )
-  .dependsOn(`search-api`)
+  .dependsOn(`search-api`, `reservation-api`)
 
 lazy val `web-gateway` = (project in file("web-gateway"))
   .enablePlugins(PlayScala && LagomPlay)
   .disablePlugins(PlayLayoutPlugin)
-  .dependsOn(`search-api`)
+  .dependsOn(`search-api`, `reservation-api`)
   .settings(
     version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
