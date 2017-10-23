@@ -4,9 +4,12 @@ import com.example.reservation.api.ReservationService
 import com.lightbend.lagom.scaladsl.api.ServiceLocator
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
+import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
 import com.lightbend.lagom.scaladsl.server.{LagomApplication, LagomApplicationContext, LagomApplicationLoader}
 import play.api.LoggerConfigurator
 import play.api.libs.ws.ahc.AhcWSComponents
+
+import com.softwaremill.macwire._
 
 /**
   * The application loader. Loads a Lagom application.
@@ -38,7 +41,9 @@ abstract class ReservationApplication(context: LagomApplicationContext)
   // Includes the lagom application components
   extends LagomApplication(context)
   // And we use the async-http-client WS client implementation
-  with AhcWSComponents {
+  with AhcWSComponents
+  // And mix in the Cassandra persistence components
+  with CassandraPersistenceComponents {
 
   // Initialise logging
   LoggerConfigurator(environment.classLoader).foreach(_.configure(environment))
@@ -46,6 +51,17 @@ abstract class ReservationApplication(context: LagomApplicationContext)
   /**
     * Provide a servire for the reservation service.
     */
-  override def lagomServer = serverFor[ReservationService](new ReservationServiceImpl)
+  override def lagomServer = serverFor[ReservationService](wire[ReservationServiceImpl])
+
+  /**
+    * Register the reservation entity with the persistent entity registry
+    */
+  persistentEntityRegistry.register(wire[ReservationEntity])
+
+  /**
+    * Set the JSON serializer registry that Akka uses to be the reservation
+    * serializer registry.
+    */
+  override def jsonSerializerRegistry = ReservationSerializerRegistry
 }
 
