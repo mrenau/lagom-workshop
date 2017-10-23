@@ -1,5 +1,6 @@
 package com.example.search.impl
 
+import com.example.reservation.api.ReservationService
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.server._
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
@@ -31,4 +32,7 @@ abstract class SearchApplication(context: LagomApplicationContext)
 
   // Bind the service that this server provides
   override lazy val lagomServer = serverFor[SearchService](wire[SearchServiceImpl])
+
+  // Create the reservation service client
+  lazy val reservationService = serviceClient.implement[ReservationService]
 }
