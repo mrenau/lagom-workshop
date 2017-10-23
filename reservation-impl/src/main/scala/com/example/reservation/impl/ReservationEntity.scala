@@ -89,3 +89,30 @@ case object GetCurrentReservations extends ReservationCommand[Seq[Reservation]] 
   implicit val format: Format[GetCurrentReservations.type] =
     Format(Reads(_ => JsSuccess(GetCurrentReservations)), Writes(_ => JsString("get")))
 }
+
+/**
+  * The state of the reservation listing.
+  *
+  * This is used to accumlate all the reservation events into a current state.
+  *
+  * @param reservations The reservations for this listing.
+  */
+case class ReservationState(reservations: Seq[Reservation])
+
+object ReservationState {
+
+  /**
+    * JSON format for the reservation state.
+    *
+    * When reservation entities are snapshotted, the state is stored to the
+    * snapshot store. This will be used to define how it gets serialized
+    * and deserialized in that store.
+    */
+  implicit val format: Format[ReservationState] = Json.format
+
+  /**
+    * The empty state, no reservations.
+    */
+  val empty = ReservationState(Nil)
+}
+
