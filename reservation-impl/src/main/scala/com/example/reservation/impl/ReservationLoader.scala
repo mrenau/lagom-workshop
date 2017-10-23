@@ -21,8 +21,9 @@ class ReservationLoader extends LagomApplicationLoader {
     *
     * For now, just use no service locator.
     */
-  override def load(context: LagomApplicationContext) = new ReservationApplication(context) {
-    override def serviceLocator: ServiceLocator = NoServiceLocator
+  override def load(context: LagomApplicationContext) = new ReservationApplication(context)
+    with LagomKafkaComponents {
+      override def serviceLocator: ServiceLocator = NoServiceLocator
   }
 
   /**
@@ -31,7 +32,9 @@ class ReservationLoader extends LagomApplicationLoader {
     * Mix in the dev mode components to get the dev mode service locator.
     */
   override def loadDevMode(context: LagomApplicationContext) =
-    new ReservationApplication(context) with LagomDevModeComponents
+    new ReservationApplication(context)
+      with LagomKafkaComponents
+      with LagomDevModeComponents
 }
 
 /**
@@ -43,9 +46,7 @@ abstract class ReservationApplication(context: LagomApplicationContext)
   // And we use the async-http-client WS client implementation
   with AhcWSComponents
   // And mix in the Cassandra persistence components
-  with CassandraPersistenceComponents
-  // And mix in the Kafka broker components
-  with LagomKafkaComponents {
+  with CassandraPersistenceComponents {
 
   // Initialise logging
   LoggerConfigurator(environment.classLoader).foreach(_.configure(environment))
