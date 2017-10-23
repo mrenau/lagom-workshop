@@ -3,8 +3,9 @@ package com.example.reservation.impl
 import java.util.UUID
 
 import com.example.common.Reservation
+import com.lightbend.lagom.scaladsl.persistence.PersistentEntity.ReplyType
 import com.lightbend.lagom.scaladsl.persistence.{AggregateEvent, AggregateEventTag}
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json._
 
 /**
   * Trait for all reservation events.
@@ -49,4 +50,42 @@ object ReservationAdded {
     * persisted to the event log.
     */
   implicit val format: Format[ReservationAdded] = Json.format
+}
+
+/**
+  * Trait for all reservation commands.
+  */
+sealed trait ReservationCommand[R] extends ReplyType[R]
+
+/**
+  * Command to add a reservation.
+  *
+  * @param reservation The reservation to add.
+  */
+case class AddReservation(
+  reservation: Reservation
+) extends ReservationCommand[ReservationAdded]
+
+object AddReservation {
+
+  /**
+    * JSON format for the add reservation command.
+    *
+    * Commands may be sent over the wire to entities because entites are
+    * sharded across your Lagom cluster. This will be used to define
+    * how the command gets serialized and deserialized.
+    */
+  implicit val format: Format[AddReservation] = Json.format
+}
+
+/**
+  * Command to get the current reservations.
+  */
+case object GetCurrentReservations extends ReservationCommand[Seq[Reservation]] {
+
+  /**
+    * JSON format for the get current reservations command.
+    */
+  implicit val format: Format[GetCurrentReservations.type] =
+    Format(Reads(_ => JsSuccess(GetCurrentReservations)), Writes(_ => JsString("get")))
 }
