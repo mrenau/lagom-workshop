@@ -2,6 +2,7 @@ package com.example.web
 
 import _root_.controllers.Assets
 import com.example.search.api.SearchService
+import com.example.reservation.api.ReservationService
 import com.example.web.controllers.Main
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.api.{ServiceAcl, ServiceInfo}
@@ -33,6 +34,7 @@ abstract class WebGateway(context: Context) extends BuiltInComponentsFromContext
     wire[_root_.router.Routes]
   }
 
+  lazy val reservationService = serviceClient.implement[ReservationService]
   lazy val searchService = serviceClient.implement[SearchService]
 
   lazy val main = wire[Main]
