@@ -1,8 +1,12 @@
 package com.example.reservation.impl
 
+import java.time.LocalDate
+import java.util.UUID
+
 import akka.Done
 import com.datastax.driver.extras.codecs.jdk8.LocalDateCodec
 import com.datastax.driver.core.BoundStatement
+import com.example.common.Reservation
 import com.lightbend.lagom.scaladsl.persistence.{EventStreamElement, ReadSideProcessor}
 import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
 
@@ -36,7 +40,7 @@ class ReservationEventProcessor(session: CassandraSession, readSide: CassandraRe
   private def insertReservation(event: EventStreamElement[ReservationAdded]): Future[immutable.Seq[BoundStatement]] = {
     session.prepare(
       """INSERT INTO current_reservations (listing_id, checkout, checkin, reservation_id)
-        |VALUES (?, ?, ?, ?)
+        |VALUES (?, ?, ?, ?);
       """.stripMargin).map { statement =>
         immutable.Seq(statement.bind(
           event.event.listingId,
@@ -67,4 +71,29 @@ class ReservationEventProcessor(session: CassandraSession, readSide: CassandraRe
     * The tags this read side processor handles.
     */
   override def aggregateTags = immutable.Set(ReservationEvent.Tag)
+}
+
+/**
+  * Repository for current reservations.
+  */
+class CurrentReservationsRepository(session: CassandraSession)(implicit ec: ExecutionContext) {
+
+  /**
+    * Get the current reservations for the given listing
+    */
+  def getCurrentReservations(listingId: UUID): Future[Seq[Reservation]] = {
+    session.selectAll(
+      """SELECT checkin, checkout
+        |FROM current_reservations
+        |WHERE listing_id = ?
+        |AND checkout >= ?
+        |ORDER BY checkout ASC
+      """.stripMargin, listingId, LocalDate.now
+    ).map { rows =>
+      rows.map { row =>
+        Reservation(row.get("checkin", classOf[LocalDate]), row.get("checkout", classOf[LocalDate]))
+      }
+    }
+  }
+
 }
