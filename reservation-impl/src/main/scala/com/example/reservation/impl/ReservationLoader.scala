@@ -66,5 +66,15 @@ abstract class ReservationApplication(context: LagomApplicationContext)
     * serializer registry.
     */
   override def jsonSerializerRegistry = ReservationSerializerRegistry
+
+  /**
+    * The current reservations repository
+    */
+  lazy val currentReservationsRepository = wire[CurrentReservationsRepository]
+
+  /**
+    * Register the reservation read side
+    */
+  readSide.register(wire[ReservationEventProcessor])
 }
 

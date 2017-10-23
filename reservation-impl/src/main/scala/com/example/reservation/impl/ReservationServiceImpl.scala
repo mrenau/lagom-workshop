@@ -14,7 +14,8 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Implementation of the reservation service
   */
-class ReservationServiceImpl(persistentEntityRegistry: PersistentEntityRegistry)(implicit ec: ExecutionContext)
+class ReservationServiceImpl(persistentEntityRegistry: PersistentEntityRegistry,
+  currentReservationsRepository: CurrentReservationsRepository)(implicit ec: ExecutionContext)
   extends ReservationService {
 
   /**
@@ -43,7 +44,7 @@ class ReservationServiceImpl(persistentEntityRegistry: PersistentEntityRegistry)
     */
   override def getCurrentReservations(listingId: UUID) = ServiceCall { _ =>
     // Get the current reservations from the enitity
-    reservationEntity(listingId).ask(GetCurrentReservations)
+    currentReservationsRepository.getCurrentReservations(listingId)
   }
 
   /**
