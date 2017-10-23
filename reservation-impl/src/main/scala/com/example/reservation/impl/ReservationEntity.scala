@@ -183,7 +183,7 @@ class ReservationEntity extends PersistentEntity {
 
           // Check that it doesn't overlap with any existing reservations
           } else if (reservations.exists(_.conflictsWith(reservation))) {
-            ctx.commandFailed(BadRequest("Listing is already booked for those dates"))
+            ctx.invalidCommand("Listing is already booked for those dates")
             ctx.done
           } else {
 
