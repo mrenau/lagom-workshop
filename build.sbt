@@ -29,6 +29,7 @@ lazy val `reservation-impl` = (project in file("reservation-impl"))
       lagomScaladslPersistenceCassandra,
       lagomScaladslKafkaBroker,
       lagomScaladslTestKit,
+      "com.datastax.cassandra" % "cassandra-driver-extras" % "3.1.4",
       macwire,
       scalaTest
     )
