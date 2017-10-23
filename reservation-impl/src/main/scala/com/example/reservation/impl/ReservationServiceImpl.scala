@@ -1,34 +1,46 @@
 package com.example.reservation.impl
 
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import com.example.common
 import com.example.reservation.api.ReservationService
 import com.lightbend.lagom.scaladsl.api.ServiceCall
-import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
+import com.lightbend.lagom.scaladsl.persistence.{PersistentEntityRef, PersistentEntityRegistry}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Implementation of the reservation service
   */
-class ReservationServiceImpl(persistentEntityRegistry: PersistentEntityRegistry) extends ReservationService {
+class ReservationServiceImpl(persistentEntityRegistry: PersistentEntityRegistry)(implicit ec: ExecutionContext)
+  extends ReservationService {
+
+  /**
+    * Convenience function to get a persistent entity ref for the given listing.
+    */
+  private def reservationEntity(listingId: UUID): PersistentEntityRef[ReservationCommand[_]] = {
+    persistentEntityRegistry.refFor[ReservationEntity](listingId.toString)
+  }
 
   /**
     * Reserve the given listing.
     */
   override def reserve(listingId: UUID) = ServiceCall { reservation =>
-    Future.successful(common.ReservationAdded(listingId, UUID.randomUUID(), reservation))
+    // Get the entity ref
+    reservationEntity(listingId)
+      // Ask it to add a reservation
+      .ask(AddReservation(reservation))
+      // Map the result to the common ReservationAdded model
+      .map { added =>
+        common.ReservationAdded(added.listingId, added.reservationId, added.reservation)
+      }
   }
 
   /**
     * Get the current reservations for the given listing.
     */
   override def getCurrentReservations(listingId: UUID) = ServiceCall { _ =>
-    Future.successful(Seq(
-      common.Reservation(LocalDate.now, LocalDate.now.plus(2, ChronoUnit.DAYS))
-    ))
+    // Get the current reservations from the enitity
+    reservationEntity(listingId).ask(GetCurrentReservations)
   }
 }
